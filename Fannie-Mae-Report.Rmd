@@ -1,0 +1,226 @@
+---
+title: "Understanding Borrower Behavior and Characteristics: 2007 vs 2019"
+author: Amlan Mohanty
+format: html
+output: bookdown::html_document2
+toc: false
+editor: visual
+---
+
+```{=html}
+<!This block assists in formatting the title, font size, chart caption, etc.– –>
+<style type="text/css">
+  .title {
+    text-align: left;
+}
+body{ /* Normal  */
+      font-size: 16px;
+      margin: 2.5cm;
+      top: 1.5cm;
+      text-align: justify;
+  }
+  .caption {
+    font-size: big;
+    text-align: center;
+    position: above;
+}
+</style>
+```
+```{css plotly-caption, echo = FALSE}
+/*Include this block if you like the chart caption at the top instead of the bottom.*/
+div.figure {
+  display: table;
+}
+div.figure p {
+  display: table-caption;
+  caption-side: top;
+}
+```
+
+------------------------------------------------------------------------
+
+### Introduction {.unnumbered}
+
+Borrower behavior and attributes are crucial for Fannie Mae to understand its customers, grow its business and support its mission of providing home loans to the people in need. My goal for this assignment is to analyze and compare borrower attributes in 2007, a period of financial instability and 2019, just before the onset of COVID-19. Analyzing borrower characteristics will help Fannie Mae in making better decisions for the company by conducting risk assessment and prediction of defaulters. This will also help Fannie Mae in conducting market analysis, which will be pivotal in their policy development for the new market.
+
+### Borrower Statistics {.unnumbered}
+
+Firstly, let's take a look at the number of borrowers in the data for each of the years 2007 and 2019 and how many of them were defaulters. In Figure \@ref(fig:proportion-of-defaulters), we can see that in the year 2007, there are a large number of defaulters constituting 9% of the total borrowers. In 2019, the percentage of defaulters is very less, nearly 0.2% of the total borrowers. This shows us how the market conditions affect the borrowers - in 2007, the number of defaulters went up due to financial instability in the market while in 2019, the market was stable and thus, the number of defaulters are also less.
+
+### Credit Score {.unnumbered}
+
+Credit score is a very useful tool to assess the creditworthiness of a borrower. Companies use it to check the credit history of a borrower which helps them decide whether they should trust the borrower for money lending. A borrower with a lower credit score is more likely to default. So, companies check your credit score before lending you money. From Figure \@ref(fig:average-credit-score), it is clearly visible from the chart that on average, defaulters have a lower credit score than non-defaulters for both the years. In 2007, the average credit score for both borrowers and non-borrowers is lower than in 2019, owing to the bad market condition in 2007.
+
+### How is Credit Score correlated to Interest Rate? {.unnumbered}
+
+It is a general trend in the market that a borrower with a higher credit score is lent money at a relatively lower interest rate than a borrower with a lower credit score. In Figure \@ref(fig:roi-vs-creditscore) for the year 2007, when the market was in a tight spot, we can see how the interest rates kept growing as the credit score dropped for a borrower. For 2019, although the interest rates were lower than in 2007, we can see a similar correlation between credit score and interest rates. We can hover over each of the points in this interactive chart to check a particular borrower's credit score and interest rate.
+
+### Debt to Income Ratio {.unnumbered}
+
+The debt to income ratio tells us if the borrower is in a condition to pay back the loan, given his current monthly income compared to the debt he has to pay each month. A higher debt to income ratio means that the borrower cannot handle paying back the loan since his debt amount will be too much according to his current income. This means that financial stress and thus, default risk, is higher for a borrower with a high DTI ratio. Generally, the DTI ratio should not exceed the borrower's 45-50% of monthly income. In Figure \@ref(fig:DTI-box), we can see that in the year 2007, borrowers have a higher median DTI and greater range than in the year 2019. This tells us a story of how many borrowers were at risk of defaulting in the year 2007 than in 2019.
+
+### Loan to Value Ratio: Purchase vs Refinance {.unnumbered}
+
+Loan to value ratio compares the amount of loan we have taken against the value of the property. LTV is very crucial when deciding whether to purchase or refinance a property. In Figure \@ref(fig:LTV-purpose), we can see that for both the years, the average LTV for refinancing is lower than that for Purchasing. Even though the market was in a bad condition in 2007, the average LTV ratio was lower than in 2019. This means, the risk associated with purchasing a home was more in 2019 than in 2007 despite financial turmoil.
+
+### Conclusion {.unnumbered}
+
+We can conclude that an average borrower's behavior was more risky in 2007 than in 2019. The borrower was more likely to fall under financial stress and become a defaulter in 2007 than in 2019. The borrower's average credit score was lower in 2007 than in 2019. Credit scores are negatively correlated to interest rates. Interest rates for borrowers were relatively higher in 2007 than in 2019. Average LTV was lower for refinance purposes.
+
+(Word count: 766)
+
+<br>
+
+### Figure Appendix {.unnumbered}
+
+<br>
+
+```{r, include = FALSE}
+# This is the code block for tasks that do not generate charts, such as loading data, importing packages, data cleaning, and variable manipulation. 
+# You can include as many of these blocks as needed. 
+# Adding "include = FALSE" will prevent the code block from appearing in the HTML output file.
+# You can use "read_rds" to load in the data.
+
+library(tidyverse)
+library(gganimate)
+library(gifski)
+library(scales)
+library(plotly)
+data_2007 <- read_rds("data_sample_2007Q4.rds")
+data_2019 <- read_rds("data_sample_2019Q4.rds")
+data_2007$year <- "2007"
+data_2019$year <- "2019"
+data_merged <- rbind(data_2007, data_2019)
+
+```
+
+```{r include=FALSE}
+datac <- data_merged %>%
+  mutate(DEFAULTER = ifelse(DEFAULT_FLAG == 1,"YES","NO"),
+         DEFAULTER = as.factor(DEFAULTER)) %>%
+  group_by(year,DEFAULTER) %>%
+  summarise(count = n())
+```
+
+```{r proportion-of-defaulters, echo = FALSE, warning= FALSE, fig.width=10, fig.height = 4, fig.cap="There are 9% defaulters in 2007 compared to 0.2% in 2019."}
+datac %>%
+  mutate(percent = count/sum(count)) %>%
+  ggplot(aes(x=year, y= percent, group = DEFAULTER)) +
+  geom_col(aes(fill=DEFAULTER),width=0.7)+
+  labs(y = "Proportion of Borrowers",
+       x = "") +
+   geom_text(aes( y = percent, label = scales ::percent(round(percent,4))),size =3, position = position_stack(vjust = 0.5)) +
+  theme_minimal() +
+  theme(axis.title.x = element_text(face="bold"),
+        axis.text = element_text(face="bold",size=10),
+        legend.position="bottom",
+        legend.margin = margin(t=-15),
+        plot.caption = element_text(face="italic"),
+        plot.title = element_text(size=14),
+        panel.grid.minor = element_blank(), 
+        panel.grid.major.y = element_line(color="grey90"),
+        panel.grid.major.x = element_blank())
+
+```
+
+<br>
+
+```{r include=FALSE}
+datad <- data_merged %>%
+  mutate(DEFAULTER = ifelse(DEFAULT_FLAG == 1,"YES","NO"),
+         DEFAULTER = as.factor(DEFAULTER)) %>%
+  group_by(year,DEFAULTER) %>%
+  summarise(avg_credit_score = mean(CSCORE_B,, na.rm=TRUE))
+```
+
+```{r average-credit-score, echo = FALSE, warning= FALSE, fig.width=10, fig.height = 4, fig.cap="Defaulters have a lower credit score than non-defaulters. Average Credit Scores are higher in 2019."}
+datad %>%
+  ggplot(aes(x=year, y= avg_credit_score , fill = DEFAULTER)) +
+  geom_col(width=0.7, position="dodge")+
+  labs(y = "Average Credit Score",
+       x = "") +
+   geom_text(aes( y = avg_credit_score, label = round(avg_credit_score,0)), position = position_dodge(0.7)) +
+  theme_minimal() +
+  theme(axis.title.x = element_text(face="bold"), 
+        axis.text = element_text(face="bold",size=10),
+        legend.position="bottom",
+        legend.margin = margin(t=-15),
+        plot.caption = element_text(face="italic"),
+        plot.title = element_text(size=14),
+        panel.grid.minor = element_blank(), 
+        panel.grid.major.y = element_line(color="grey90"),
+        panel.grid.major.x = element_blank())
+
+```
+
+<br>
+
+```{r roi-vs-creditscore, echo = FALSE, warning= FALSE, message=FALSE, fig.width=10, fig.height = 4, fig.cap="Interest rate of loans decreases as Credit score increases."}
+y <- data_merged %>%
+  ggplot(aes(x=ORIG_RATE,y= CSCORE_B)) +
+  geom_point(stroke=NA, alpha=0.8, size=2, color='grey') + 
+  geom_smooth(method = "lm", se = FALSE, lty = 1, aes(color = year)) + 
+  labs(caption = "Fannie Mae Loan Data",
+       x="Rate of interest (%)", y="Credit Score") +
+  theme_classic() +
+  theme(axis.title.x = element_text(face="bold",margin = margin(t = 10)),
+        axis.text = element_text(face="bold",size=10),
+        plot.caption = element_text(face="italic"),
+        plot.title = element_text(size=12),
+        panel.grid.major.y = element_line(color="grey95"),
+        panel.grid.major.x = element_blank()) 
+  
+ggplotly(y)
+
+```
+
+<br>
+
+```{r DTI-box, echo = FALSE, warning= FALSE, message=FALSE, fig.width=10, fig.height = 5, fig.cap="Borrowers have a higher median DTI in 2007, showcasing higher financial stress in the year."}
+
+data_merged %>%
+  ggplot(aes(x=year, y=DTI, col= year )) + 
+  geom_boxplot(aes(fill=DTI))+
+  #geom_jitter(width = 0.1, height = 0, stroke=NA, alpha=0.5,size=2) +
+  geom_boxplot(alpha=0.1,outlier.color = NA) + 
+  labs(x="Year", y="Debt to Income Ratio") +
+  theme_classic() +
+  theme(axis.ticks = element_blank(), 
+        legend.position = "bottom",
+        axis.title.x = element_text(face="bold",margin = margin(t = 10)), 
+        plot.caption = element_text(face="italic"),
+        plot.title = element_text(size=10),
+        panel.grid.major.y = element_line(color="grey90")) 
+```
+
+<br>
+
+```{r include=FALSE}
+datae <- data_merged %>%
+  mutate(DEFAULTER = ifelse(DEFAULT_FLAG == 1,"YES","NO"),
+         DEFAULTER = as.factor(DEFAULTER),
+         PURPOSE = ifelse(PURPOSE %in% c("C","R"),"Refinance","Purchase"))%>%
+  group_by(year,PURPOSE) %>%
+  summarise(avg_oltv = mean(OLTV, na.rm=TRUE))
+```
+
+```{r LTV-purpose, echo = FALSE, fig.width=10, warning= FALSE, fig.height = 5, fig.cap="Average LTV is lower for Refinance purposes."}
+datae %>%
+  ggplot(aes(x=year, y= avg_oltv , fill = PURPOSE)) +
+  geom_col(width=0.7, position="dodge")+
+  labs(y = "Average Loan to Value Ratio",
+       x = "") +
+   geom_text(aes( y = avg_oltv, label = round(avg_oltv,2)), position = position_dodge(0.7)) +
+  theme_minimal() +
+  theme(axis.title.x = element_text(face="bold"), 
+        axis.text = element_text(face="bold",size=10),
+        legend.position="bottom",
+        legend.margin = margin(t=-15),
+        plot.caption = element_text(face="italic"),
+        plot.title = element_text(size=14),
+        panel.grid.minor = element_blank(), 
+        panel.grid.major.y = element_line(color="grey90"),
+        panel.grid.major.x = element_blank()) 
+```
+
+###  {.unnumbered}
